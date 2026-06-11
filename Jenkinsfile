@@ -5,6 +5,7 @@ pipeline {
     environment {
         IMAGE_NAME = "my-awesome-app"
         IMAGE_TAG = "${env.BUILD_NUMBER}" // ប្រើលេខ Build របស់ Jenkins ជា Tag (ឧទាហរណ៍: my-awesome-app:5)
+        DOCKER_USER = "ranmakara" // ប្ដូរទៅឈ្មោះអ្នកប្រើ Docker Hub របស់អ្នក
     }
 
     stages {
@@ -19,8 +20,8 @@ pipeline {
             steps {
                 echo "កំពុង Build Docker Image: ${IMAGE_NAME}:${IMAGE_TAG}..."
                 // ដំណើរការបញ្ជា docker build
-                sh 'docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .'
-                sh 'docker build -t ${IMAGE_NAME}:latest .' // បង្កើត Tag latest មួយទៀត
+                sh 'docker build -t ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG} .'
+                sh 'docker build -t ${DOCKER_USER}/${IMAGE_NAME}:latest .' // បង្កើត Tag latest មួយទៀត
             }
         }
         
@@ -30,7 +31,7 @@ pipeline {
                 sh 'docker image ls | grep ${IMAGE_NAME}'
             }
         }
-        stage('បញ្ជូនទៅ Docker Hub (Push Image)') {
+           stage('បញ្ជូនទៅ Docker Hub (Push Image)') {
             steps {
                 echo 'កំពុងភ្ជាប់ និងបញ្ជូន Image ទៅកាន់ Docker Hub...'
                 // ប្រើប្រាស់ Credentials ដែលយើងបានលាក់ទុកក្នុង Jenkins
@@ -48,8 +49,8 @@ pipeline {
                 echo 'កំពុងទាញយក និងដាក់ឱ្យដំណើរការ...'
                 // 1. បញ្ឈប់ និងលុប Container ចាស់ (ប្រសិនបើមាន) ដើម្បីកុំឱ្យជាន់គ្នា
                 sh '''
-                    docker stop ${IMAGE_NAME} || true
-                    docker rm ${IMAGE_NAME} || true
+                    docker stop ${IMAGE_NAME}  true
+                    docker rm ${IMAGE_NAME}  true
                 '''
                 
                 // 2. ដំណើរការ Container ថ្មី
@@ -68,4 +69,3 @@ pipeline {
         }
     }
 }
-
